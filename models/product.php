@@ -41,11 +41,23 @@ class product {
 		    $products[$pid]['variants'][] = $variant;
 			$old_pid = $pid;
 		}
-		return (count($products) > 1) ? array('products' => array_values($products)) : array_shift($products);
+
+		if (count($products) == 0) {
+			return [];
+		} elseif (count($products) == 1) {
+			return array_shift($products);
+		} else {
+			return array('products' => array_values($products));
+		}
 	}
 
-	public function create_product_variant($name, $sku, $quantity, $price) {
-		db::query('insert into variants (product_id, name, sku, quantity, price) values ("%d", "%s", "%s", "%d", "%f")', $this->id, $name, $sku, $quantity, $price);
+	public function create_or_update_product_variant($name, $sku, $quantity, $price) {
+		$variant_id = db::result_query('select id from variants where sku="%s" and product_id=%d', $sku, $this->id);
+		if ($variant_id) {
+			return db::query('update variants set name="%s", quantity="%d", price="%f" where id=%d', $name, $quantity, $price, $variant_id);
+		} else {
+			return db::query('insert into variants (product_id, name, sku, quantity, price) values ("%d", "%s", "%s", "%d", "%f")', $this->id, $name, $sku, $quantity, $price);
+		}
 	}
 
 }

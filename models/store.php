@@ -23,13 +23,19 @@ class store {
 
 	public function clear_all_products_and_variants() {
 		$ids = db::col_query('select v.id, p.id from variants v join products p on v.product_id=p.id join stores s on p.store_id=s.id where s.id=%d', $this->id);
-		db::query('delete from variants where id in (%s)', join(',', array_keys($ids)));
-		db::query('delete from products where id in (%s)', join(',', array_values($ids)));
+		if (count($ids) > 0) {
+			db::query('delete from variants where id in (%s)', join(',', array_keys($ids)));
+			db::query('delete from products where id in (%s)', join(',', array_values($ids)));
+		}
 	}
 
-	public function create_product($name) {
-		db::query('insert into products (store_id, name) values ("%d", "%s")', $this->id, $name);
-		return new product(db::insert_id());
+	public function create_product_if_not_exists($name) {
+		$pid = db::result_query('select id from products where name="%s"', $name);
+		if (!$pid) {
+			db::query('insert into products (store_id, name) values ("%d", "%s")', $this->id, $name);
+			$pid = db::insert_id();
+		}
+		return new product($pid);
 	}
 
 }

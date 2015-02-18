@@ -15,21 +15,21 @@ class shopify extends channel implements channel_interface {
 	public function sync_to_store() {
 		$url = spf('https://%s:%s@%s.myshopify.com/admin/products.json', $this->store_channel['username'], $this->store_channel['password'], $this->store_channel['store_url']);
 
-		// commented out for speed of testing
-		// $products = json_decode(file_get_contents($url), true);
-		$products = json_decode(file_get_contents('./tmp.json'), true)['products'];
+		// comment out for speed of testing
+		$products = json_decode(file_get_contents($url), true)['products'];
+		// $products = json_decode(file_get_contents('./tmp.json'), true)['products'];
 
 		$store = new store($this->store['id']);
-		$store->clear_all_products_and_variants();
 
-		//return $products;
+		// uncomment for testing
+		// $store->clear_all_products_and_variants();
 
 		foreach ($products as $product) {
-			$product_obj = $store->create_product($product['title']); // product name
-			
+			$product_obj = $store->create_product_if_not_exists($product['title']); // product name
+
 			foreach ($product['variants'] as $variant) {
 				list($name, $sku, $quantity, $price) = array_pluck($variant, array('title', 'sku', 'inventory_quantity', 'price'));
-				$product_obj->create_product_variant($name, $sku, $quantity, $price);
+				$product_obj->create_or_update_product_variant($name, $sku, $quantity, $price);
 			}
 		}
 

@@ -35,7 +35,7 @@ class ApiController extends BaseController {
     }
 
 	public function sync_all() {
-		return store::sync_all();
+		return array('result' => store::sync_all());
 	}
 
     public function products($data) {
